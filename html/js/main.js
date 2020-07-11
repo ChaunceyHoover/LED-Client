@@ -1,6 +1,8 @@
-// Canvas element
+// DOM element
+const jControls = $('#controls');
 const jCanvas = $('#leds');
 const canvas = jCanvas[0];
+const controls = jControls[0];
 const width = jCanvas.outerWidth();
 const height = jCanvas.outerHeight();
 
@@ -96,6 +98,21 @@ function onPaint() {
     ctx.stroke();
     drawBorder();
 }
+
+// Add color controls
+colors = ['red', 'rgb(255, 127, 0)', 'yellow', 'rgb(0, 255, 0)', 'blue', 'rgb(127, 0, 255)', 'rgb(255, 0, 255)', 'white', 'black']
+colors.forEach(function(col, indx) {
+    var palette = $(`<div id='${indx}' style='background-color:${col}'></div>`);
+    palette.click(function() {
+        ctx.strokeStyle = col;
+        $('#controls div').each(function() {
+            $(this).css('border', '0px');
+        });
+        palette.css('border', `4px solid ${col == 'black' ? 'white' : 'black'}`);
+    });
+    jControls.append(palette);
+
+});
 
 /**
  * Draws a border around the intended drawable area to be mapped to the LEDs
@@ -241,7 +258,6 @@ setInterval(function() {
         if (!colCompare(col1, col2)) {
             let led = [i, col2.r, col2.g, col2.b, col2.w];
             ledSocket.send(JSON.stringify(led));
-            console.log('sent data');
         }
     }
 

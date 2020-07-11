@@ -23,11 +23,13 @@ body, p, h1, h2, h3, h4, h5, h6, a, span {
     position: relative;
 }
 
-.app-container > *:first-child {
-    flex-grow: 0.75;
+.app-container > :first-child {
+    min-height: 75%;
+    max-height: 75%;
 }
-.app-container > *:last-child {
-    flex-grow: 0.25;
+.app-container > :last-child {
+    min-height: 25%;
+    max-height: 25%;
     border-top: 2px solid black;
 }
 
@@ -38,6 +40,24 @@ body, p, h1, h2, h3, h4, h5, h6, a, span {
 
 #controls {
     background-color: gray;
+    display: flex;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    box-sizing: border-box;
+}
+
+#controls > * {
+    justify-content: space-between;
+    padding: 1%;
+    width: 10%;
+    height: 30%;
+    margin: 1%;
+    line-height: 50px;
+    color: white;
+    font-weight: bold;
+    font-size: 2em;
+    text-align: center;
 }
 
 .square {
