@@ -226,10 +226,10 @@ function serialize() {
     data[202] = averageColors(colors);
 
     // top left to bottom left
-    ledSize = (adjusted.h - size) / (300 - 204);
-    start = adjusted.x
+    ledSize = (adjusted.h - adjusted.y - size) / (300 - 204);
+    start = adjusted.y - ledSize * 2;
     for (var i = 203; i < 300; i++) {
-        let pix = ctx.getImageData(adjusted.x + 2, adjusted.y + size + 2, size - 4, ledSize).data;
+        let pix = ctx.getImageData(adjusted.x + 2, adjusted.y + size + 2, size - 4, start + ledSize).data;
         let colors = [];
 
         for (var j = 0; j < pix.length; j += 4) {
