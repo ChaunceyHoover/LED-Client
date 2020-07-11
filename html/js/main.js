@@ -1,15 +1,23 @@
+// Canvas element
 const jCanvas = $('#leds');
 const canvas = jCanvas[0];
-
-const padding = 0.1; // percentage
-const size = 32; // pixels
 const width = jCanvas.outerWidth();
 const height = jCanvas.outerHeight();
 
+// Configuration
+const padding = 0.1; // percentage
+const size = 32; // pixels
+
 const adjusted = { x: width * padding, y: height * padding, w: width * (1 - padding * 2), h: height * (1 - padding * 2) };
 
+var data = [];
+
+// no poop browsers
 if (!canvas.getContext)
     alert('lole your browser is lame');
+
+// Connect to LED server
+var ledSocket = new WebSocket("ws://192.168.1.116:5678/"); // pls don't hack my ip
 
 // mobile friendly time
 document.body.addEventListener("touchstart", function (e) {
@@ -31,12 +39,13 @@ document.body.addEventListener("touchmove", function (e) {
 const ctx = canvas.getContext('2d');
 const mouse = {x: 0, y: 0};
 
-function Color(r=0, g=0, b=0, a=0) {
-    return { r, g, b, a };
+function Color(r=0, g=0, b=0, w=0) {
+    return { r, g, b, w };
 }
 
-var currentColor = Color(255, 0, 255, 255);
+var currentColor = Color(0, 0, 255, 255);
 
+// Update mouse coordinates on canvas from mouse movements
 canvas.addEventListener('mousemove', function(e) {
     mouse.x = e.pageX - this.offsetLeft;
     mouse.y = e.pageY - this.offsetTop;
@@ -47,13 +56,15 @@ canvas.addEventListener('touchmove', function(e) {
     mouse.y = e.touches[0].clientY - rect.top;
 }, false);
 
+// Configure canvas
 ctx.canvas.width = width;
 ctx.canvas.height = height;
-ctx.lineWidth = 40;
+ctx.lineWidth = size + 8;
 ctx.lineJoin = 'round';
 ctx.lineCap = 'round';
-ctx.strokeStyle = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${currentColor.a})`;
+ctx.strokeStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
 
+// Start drawing events
 canvas.addEventListener('mousedown', function(e) {
     ctx.moveTo(mouse.x, mouse.y);
     ctx.beginPath();
@@ -67,6 +78,7 @@ canvas.addEventListener('touchstart', function(e) {
     canvas.addEventListener('touchmove', onPaint, false);
 });
 
+// Stop drawing events
 canvas.addEventListener('mouseup', function() {
     canvas.removeEventListener('mousemove', onPaint, false);
     drawBorder();
@@ -78,6 +90,7 @@ canvas.addEventListener('touchend', function() {
     ctx.closePath();
 }, false);
 
+// Draw
 function onPaint() {
     ctx.lineTo(mouse.x, mouse.y);
     ctx.stroke();
@@ -107,13 +120,16 @@ function drawBorder() {
     ctx.strokeStyle = _style;
 }
 
+function colCompare(col1, col2) {
+    return col1.r == col2.r && col1.g == col2.g && col1.b == col2.b && col1.w == col2.w;
+}
+
 /**
  * Take an array of colors and returns the average of all colors
  * @param {Color[]} colors 
  * @returns {Color}
  */
-
-function averageColors(colors, d) {
+function averageColors(colors) {
     let avg = Color();
     let unique = [];
     if (colors.length == 0) return avg;
@@ -123,7 +139,7 @@ function averageColors(colors, d) {
         let testCol = colors[i];
         for (var j = 0; j < unique.length; j++) {
             let uniqueCol = unique[j];
-            if (testCol.r == uniqueCol.r && testCol.g == uniqueCol.g && testCol.b == uniqueCol.b && testCol.a == uniqueCol.a) {
+            if (colCompare(testCol, uniqueCol)) {
                 found = true;
                 break;
             }
@@ -136,13 +152,13 @@ function averageColors(colors, d) {
         avg.r += c.r;
         avg.g += c.g;
         avg.b += c.b;
-        avg.a += c.a;
+        avg.w += c.w;
     });
 
     avg.r /= unique.length;
     avg.g /= unique.length;
     avg.b /= unique.length;
-    avg.a /= unique.length;
+    avg.w /= unique.length;
 
     return avg;
 }
@@ -156,12 +172,6 @@ function serialize() {
     const _lineWidth = ctx.lineWidth;
     const _style = ctx.strokeStyle;
 
-    // let imgd = ctx.getImageData(1 + adjusted.x + adjusted.w - size, adjusted.y + adjusted.h - size, size - 2, size - 1);
-    // let pix = imgd.data;
-    // let colors = [];
-    // for (var i = 0; i < pix.length; i += 4) {
-    //     colors[i / 4] = Color(pix[i], pix[i + 1], pix[i + 2], pix[i + 3]);
-    // }
     // right: 1-102
     // top right: 103
     // top: 104-202
@@ -178,7 +188,7 @@ function serialize() {
         let colors = [];
 
         for (var j = 0; j < pix.length; j += 4) {
-            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], a: pix[j + 3] };
+            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
         }
         data[i] = averageColors(colors);
         start -= ledSize;
@@ -188,20 +198,20 @@ function serialize() {
     var pix = ctx.getImageData(3 + adjusted.x + adjusted.w - size, adjusted.y + 2, size - 4, size - 4).data;
     var colors = [];
     for (var j = 0; j < pix.length; j += 4) {
-        colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], a: pix[j + 3] };
+        colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
     }
-    data[103] = averageColors(colors);
+    data[102] = averageColors(colors);
     
     // from top right to top left
     ledSize = (adjusted.w - size * 2) / (202 - 104);
     start = adjusted.x + adjusted.w - size;
 
-    for (var i = 104; i < 202; i++) {
+    for (var i = 103; i < 202; i++) {
         let pix = ctx.getImageData(start - ledSize, adjusted.y + 2, ledSize, size - 3).data;
         let colors = [];
 
         for (var j = 0; j < pix.length; j += 4) {
-            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], a: pix[j + 3] };
+            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
         }
         data[i] = averageColors(colors);
         start -= ledSize;
@@ -211,19 +221,19 @@ function serialize() {
     pix = ctx.getImageData(2 + adjusted.x, 2 + adjusted.y, size - 4, size - 4).data;
     var colors = [];
     for (var j = 0; j < pix.length; j += 4) {
-        colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], a: pix[j + 3] };
+        colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
     }
-    data[203] = averageColors(colors);
+    data[202] = averageColors(colors);
 
     // top left to bottom left
     ledSize = (adjusted.h - size) / (300 - 204);
     start = adjusted.x
-    for (var i = 204; i < 300; i++) {
+    for (var i = 203; i < 300; i++) {
         let pix = ctx.getImageData(adjusted.x + 2, adjusted.y + size + 2, size - 4, ledSize).data;
         let colors = [];
 
         for (var j = 0; j < pix.length; j += 4) {
-            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], a: pix[j + 3] };
+            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
         }
         data[i] = averageColors(colors);
         start += ledSize;
@@ -235,5 +245,20 @@ function serialize() {
     return data;
 }
 
+// Initial outline
 drawBorder();
-serialize();
+
+data = serialize();
+setInterval(function() {
+    var _data = serialize();
+    for (var i = 0; i < data.length; i++) {
+        let col1 = data[i], col2 = _data[i];
+        if (!colCompare(col1, col2)) {
+            let led = [i, col2.r, col2.g, col2.b, col2.w];
+            ledSocket.send(JSON.stringify(led));
+            console.log('sent data');
+        }
+    }
+
+    data = _data;
+}, 500);
