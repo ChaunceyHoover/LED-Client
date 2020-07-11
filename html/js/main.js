@@ -131,34 +131,19 @@ function colCompare(col1, col2) {
  */
 function averageColors(colors) {
     let avg = Color();
-    let unique = [];
     if (colors.length == 0) return avg;
 
-    for (var i = 0; i < colors.length; i++) {
-        let found = false;
-        let testCol = colors[i];
-        for (var j = 0; j < unique.length; j++) {
-            let uniqueCol = unique[j];
-            if (colCompare(testCol, uniqueCol)) {
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-            unique.push(testCol);
-    }
-
-    unique.forEach(function(c) {
+    colors.forEach(function(c) {
         avg.r += c.r;
         avg.g += c.g;
         avg.b += c.b;
         avg.w += c.w;
     });
 
-    avg.r /= unique.length;
-    avg.g /= unique.length;
-    avg.b /= unique.length;
-    avg.w /= unique.length;
+    avg.r /= colors.length;
+    avg.g /= colors.length;
+    avg.b /= colors.length;
+    avg.w /= colors.length;
 
     return avg;
 }
@@ -229,7 +214,7 @@ function serialize() {
     ledSize = (adjusted.h - adjusted.y - size) / (300 - 204);
     start = adjusted.y - ledSize * 2;
     for (var i = 203; i < 300; i++) {
-        let pix = ctx.getImageData(adjusted.x + 2, adjusted.y + size + 2, size - 4, start + ledSize).data;
+        let pix = ctx.getImageData(adjusted.x + 2, start + adjusted.y + size + 2, size - 4, ledSize).data;
         let colors = [];
 
         for (var j = 0; j < pix.length; j += 4) {
