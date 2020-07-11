@@ -1,0 +1,57 @@
+html, body {
+    margin: 0;
+	padding: 0;
+	height: 100%;
+	display: flex;
+	flex-flow: column;
+}
+
+body {
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+body, p, h1, h2, h3, h4, h5, h6, a, span {
+	font-variant: small-caps;
+}
+
+.app-container {
+    display: flex;
+    flex-flow: column nowrap;
+    flex-grow: 1;
+    height: calc(100%);
+    position: relative;
+}
+
+.app-container > *:first-child {
+    flex-grow: 0.75;
+}
+.app-container > *:last-child {
+    flex-grow: 0.25;
+    border-top: 2px solid black;
+}
+
+#canvas {
+    background-color: chocolate;
+    position: relative;
+}
+
+#controls {
+    background-color: gray;
+}
+
+.square {
+    position: absolute;
+    width: 1%;
+    height: 1%;
+    border: 1px solid black;
+}
+
+canvas {
+    position: absolute;
+    border: 0px solid transparent;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
