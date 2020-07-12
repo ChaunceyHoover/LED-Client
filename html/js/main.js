@@ -1,14 +1,17 @@
 // DOM element
 const jControls = $('#controls');
 const jCanvas = $('#leds');
+const jColors = $('#colors');
+const jEraser = $('#eraser');
 const canvas = jCanvas[0];
 const controls = jControls[0];
+const colorRow = jColors[0];
 const width = jCanvas.outerWidth();
 const height = jCanvas.outerHeight();
 
 // Configuration
 const padding = 0.1; // percentage
-const size = 32; // pixels
+const size = 64; // pixels
 
 const adjusted = { x: width * padding, y: height * padding, w: width * (1 - padding * 2), h: height * (1 - padding * 2) };
 
@@ -45,7 +48,7 @@ function Color(r=0, g=0, b=0, w=0) {
     return { r, g, b, w };
 }
 
-var currentColor = Color(0, 0, 255, 255);
+var currentColor = Color(255, 0, 0, 0);
 
 // Update mouse coordinates on canvas from mouse movements
 canvas.addEventListener('mousemove', function(e) {
@@ -100,18 +103,39 @@ function onPaint() {
 }
 
 // Add color controls
-colors = ['red', 'rgb(255, 127, 0)', 'yellow', 'rgb(0, 255, 0)', 'blue', 'rgb(127, 0, 255)', 'rgb(255, 0, 255)', 'white', 'black']
+colors = ['red', 'rgb(255, 127, 0)', 'yellow', 'rgb(0, 255, 0)', 'cyan', 'blue', 'rgb(127, 0, 255)', 'rgb(255, 0, 255)', 'white']
+palettes = [];
 colors.forEach(function(col, indx) {
-    var palette = $(`<div id='${indx}' style='background-color:${col}'></div>`);
-    palette.click(function() {
+    var palette = document.createElement('div');
+    palette.className = 'color';
+    palette.style["background-color"] = col;
+    palette.onclick = function() {
+        ctx.globalCompositeOperation = "source-over";
         ctx.strokeStyle = col;
-        $('#controls div').each(function() {
-            $(this).css('border', '0px');
+        palettes.forEach(function(p) {
+            p.style.border = '0';
         });
-        palette.css('border', `4px solid ${col == 'black' ? 'white' : 'black'}`);
-    });
-    jControls.append(palette);
+        jEraser.css('background-color', 'white');
+        palette.style.border = `4px solid ${col == 'black' ? 'white' : 'black'}`;
+    };
+    colorRow.appendChild(palette);
+    palettes.push(palette);
+});
+palettes[0].style.border = '4px solid black';
 
+jEraser.click(function() {
+    ctx.globalCompositeOperation = "destination-out";
+    palettes.forEach(function(p) {
+        p.style.border = '0';
+    });
+    jEraser.css('background-color', 'rgb(255, 255, 204)');
+})
+
+// Add presets 
+$('#clear').click(function() {
+    ledSocket.send('z');
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    drawBorder();
 });
 
 /**
@@ -120,9 +144,11 @@ colors.forEach(function(col, indx) {
 function drawBorder() {
     const _lineWidth = ctx.lineWidth;
     const _style = ctx.strokeStyle;
+    const _gco = ctx.globalCompositeOperation;
 
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 1;
+    ctx.globalCompositeOperation = "source-over";
     for (var i = 0; i < 15; i++) {
         ctx.strokeRect(adjusted.x, adjusted.y, adjusted.w, adjusted.h);
         ctx.strokeRect(size + adjusted.x, size + adjusted.y, adjusted.w - size * 2, adjusted.h - size);
@@ -135,6 +161,7 @@ function drawBorder() {
 
     ctx.lineWidth = _lineWidth;
     ctx.strokeStyle = _style;
+    ctx.globalCompositeOperation = _gco;
 }
 
 function colCompare(col1, col2) {
