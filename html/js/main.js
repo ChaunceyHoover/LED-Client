@@ -8,18 +8,17 @@ const controls = jControls[0];
 const colorRow = jColors[0];
 const width = jCanvas.outerWidth();
 const height = jCanvas.outerHeight();
+const ctx = canvas.getContext('2d');
 
-// Configuration
-const padding = 0.1; // percentage
-const size = 64; // pixels
-
-const adjusted = { x: width * padding, y: height * padding, w: width * (1 - padding * 2), h: height * (1 - padding * 2) };
-
-var data = [];
+// Configure canvas
+ctx.canvas.width = width;
+ctx.canvas.height = height;
 
 // no poop browsers
-if (!canvas.getContext)
+if (!canvas.getContext) {
     alert('lole your browser is lame');
+    window.location.replace("https://firefox.com/download")
+}
 
 // Connect to LED server
 var ledSocket = new WebSocket("ws://192.168.1.116:5678/"); // pls don't hack my ip
@@ -27,266 +26,157 @@ var ledSocket = new WebSocket("ws://192.168.1.116:5678/"); // pls don't hack my 
 // mobile friendly time
 document.body.addEventListener("touchstart", function (e) {
     if (e.target == canvas) {
-      e.preventDefault();
+        e.preventDefault();
     }
 }, false);
 document.body.addEventListener("touchend", function (e) {
     if (e.target == canvas) {
-     e.preventDefault();
+        e.preventDefault();
     }
 }, false);
 document.body.addEventListener("touchmove", function (e) {
     if (e.target == canvas) {
-     e.preventDefault();
+        e.preventDefault();
     }
 }, false);
 
-const ctx = canvas.getContext('2d');
-const mouse = {x: 0, y: 0};
-
-function Color(r=0, g=0, b=0, w=0) {
-    return { r, g, b, w };
+/**
+ * Represents the orientation of an LED section. If the direction is `UP`/`1`, then the bottom
+ * of the section will represent the start of the LEDs and the top of the shape will represent the end
+ */
+const Direction = {
+    UP: 1,
+    RIGHT: 2,
+    DOWN: 3,
+    LEFT: 4
 }
-
-var currentColor = Color(255, 0, 0, 0);
-
-// Update mouse coordinates on canvas from mouse movements
-canvas.addEventListener('mousemove', function(e) {
-    mouse.x = e.pageX - this.offsetLeft;
-    mouse.y = e.pageY - this.offsetTop;
-}, false);
-canvas.addEventListener('touchmove', function(e) {
-    var rect = canvas.getBoundingClientRect();
-    mouse.x = e.touches[0].clientX - rect.left;
-    mouse.y = e.touches[0].clientY - rect.top;
-}, false);
-
-// Configure canvas
-ctx.canvas.width = width;
-ctx.canvas.height = height;
-ctx.lineWidth = size + 8;
-ctx.lineJoin = 'round';
-ctx.lineCap = 'round';
-ctx.strokeStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-
-// Start drawing events
-canvas.addEventListener('mousedown', function(e) {
-    ctx.moveTo(mouse.x, mouse.y);
-    ctx.beginPath();
-
-    canvas.addEventListener('mousemove', onPaint, false);
-}, false);
-canvas.addEventListener('touchstart', function(e) {
-    ctx.moveTo(mouse.x, mouse.y);
-    ctx.beginPath();
-
-    canvas.addEventListener('touchmove', onPaint, false);
-});
-
-// Stop drawing events
-canvas.addEventListener('mouseup', function() {
-    canvas.removeEventListener('mousemove', onPaint, false);
-    drawBorder();
-    ctx.closePath();
-}, false);
-canvas.addEventListener('touchend', function() {
-    canvas.removeEventListener('touchmove', onPaint, false);
-    drawBorder();
-    ctx.closePath();
-}, false);
-
-// Draw
-function onPaint() {
-    ctx.lineTo(mouse.x, mouse.y);
-    ctx.stroke();
-    drawBorder();
-}
-
-// Add color controls
-colors = ['red', 'rgb(255, 127, 0)', 'yellow', 'rgb(0, 255, 0)', 'cyan', 'blue', 'rgb(127, 0, 255)', 'rgb(255, 0, 255)', 'white']
-palettes = [];
-colors.forEach(function(col, indx) {
-    var palette = document.createElement('div');
-    palette.className = 'color';
-    palette.style["background-color"] = col;
-    palette.onclick = function() {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = col;
-        palettes.forEach(function(p) {
-            p.style.border = '0';
-        });
-        jEraser.css('background-color', 'white');
-        palette.style.border = `4px solid ${col == 'black' ? 'white' : 'black'}`;
-    };
-    colorRow.appendChild(palette);
-    palettes.push(palette);
-});
-palettes[0].style.border = '4px solid black';
-
-jEraser.click(function() {
-    ctx.globalCompositeOperation = "destination-out";
-    palettes.forEach(function(p) {
-        p.style.border = '0';
-    });
-    jEraser.css('background-color', 'rgb(255, 255, 204)');
-})
-
-// Add presets 
-$('#clear').click(function() {
-    ledSocket.send('z');
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    drawBorder();
-});
 
 /**
- * Draws a border around the intended drawable area to be mapped to the LEDs
+ * Color, as defined by SK6812W (Red, Green, Blue, White)
  */
-function drawBorder() {
-    const _lineWidth = ctx.lineWidth;
-    const _style = ctx.strokeStyle;
-    const _gco = ctx.globalCompositeOperation;
-
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
-    ctx.globalCompositeOperation = "source-over";
-    for (var i = 0; i < 15; i++) {
-        ctx.strokeRect(adjusted.x, adjusted.y, adjusted.w, adjusted.h);
-        ctx.strokeRect(size + adjusted.x, size + adjusted.y, adjusted.w - size * 2, adjusted.h - size);
+class Color {
+    /**
+     * 
+     * @param {int} r Red component, 0-255 based
+     * @param {int} g Green compontent, 0-255 based
+     * @param {int} b Blue compontent, 0-255 based
+     * @param {int} w White compontent, 0-255 based
+     */
+    constructor(r=0, g=0, b=0, w=0) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.w = w;
     }
-    ctx.clearRect(0, 0, width, adjusted.y); // top
-    ctx.clearRect(adjusted.x + adjusted.w, adjusted.y, adjusted.x, height); // right
-    ctx.clearRect(0, 0, adjusted.x, height); // left
-    ctx.clearRect(adjusted.x, adjusted.y + adjusted.h, width, adjusted.y); // bottom
-    ctx.clearRect(adjusted.x + size, adjusted.y + size, adjusted.w - size * 2, 2 + adjusted.h - size); // inside
-
-    ctx.lineWidth = _lineWidth;
-    ctx.strokeStyle = _style;
-    ctx.globalCompositeOperation = _gco;
-}
-
-function colCompare(col1, col2) {
-    return col1.r == col2.r && col1.g == col2.g && col1.b == col2.b && col1.w == col2.w;
-}
-
-/**
- * Take an array of colors and returns the average of all colors
- * @param {Color[]} colors 
- * @returns {Color}
- */
-function averageColors(colors) {
-    let avg = Color();
-    if (colors.length == 0) return avg;
-
-    colors.forEach(function(c) {
-        avg.r += c.r;
-        avg.g += c.g;
-        avg.b += c.b;
-        avg.w += c.w;
-    });
-
-    avg.r /= colors.length;
-    avg.g /= colors.length;
-    avg.b /= colors.length;
-    avg.w /= colors.length;
-
-    return avg;
-}
-
-/**
- * Converts painted strip into an array of 300 colors
- * Direction: Bottom right -> Top right -> Top left -> Bottom left (because that is how they are setup in my room)
- * @returns {Color[]}
- */
-function serialize() {
-    const _lineWidth = ctx.lineWidth;
-    const _style = ctx.strokeStyle;
-
-    // right: 1-102
-    // top right: 103
-    // top: 104-202
-    // top left: 203
-    // left: 204-300
-    var data = []
-
-    // from bottom right to top right
-    var ledSize = (adjusted.h - size) / 102;
-    var start = adjusted.y + adjusted.h;
     
-    for (var i = 0; i < 102; i++) {
-        let pix = ctx.getImageData(2 + adjusted.x + adjusted.w - size, start - ledSize, size - 3, ledSize).data;
-        let colors = [];
+    /** Default color = Black/Off */
+    static default = { r: 0, g: 0, b: 0, w: 0 };
 
-        for (var j = 0; j < pix.length; j += 4) {
-            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
-        }
-        data[i] = averageColors(colors);
-        start -= ledSize;
+    get rgb() {
+        return { r: this.r, g: this.g, b: this.b };
     }
 
-    // corner is 1 big LED because I don't want to do a bunch of complex math
-    var pix = ctx.getImageData(3 + adjusted.x + adjusted.w - size, adjusted.y + 2, size - 4, size - 4).data;
-    var colors = [];
-    for (var j = 0; j < pix.length; j += 4) {
-        colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
-    }
-    data[102] = averageColors(colors);
-    
-    // from top right to top left
-    ledSize = (adjusted.w - size * 2) / (202 - 104);
-    start = adjusted.x + adjusted.w - size;
-
-    for (var i = 103; i < 202; i++) {
-        let pix = ctx.getImageData(start - ledSize, adjusted.y + 2, ledSize, size - 3).data;
-        let colors = [];
-
-        for (var j = 0; j < pix.length; j += 4) {
-            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
-        }
-        data[i] = averageColors(colors);
-        start -= ledSize;
+    get rgbw() {
+        return { r: this.r, g: this.g, b: this.b, w: this.w };
     }
 
-    // top left corner LED (again, lazy)
-    pix = ctx.getImageData(2 + adjusted.x, 2 + adjusted.y, size - 4, size - 4).data;
-    var colors = [];
-    for (var j = 0; j < pix.length; j += 4) {
-        colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
+    /**
+     * Sets the color. 
+     * 
+     * @param {int} r Red component, 0-255 based
+     * @param {int} g Green compontent, 0-255 based
+     * @param {int} b Blue compontent, 0-255 based
+     * @param {int} w White compontent, 0-255 based
+     */
+    set(r=0, g=0, b=0, w=0) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.w = w;
     }
-    data[202] = averageColors(colors);
-
-    // top left to bottom left
-    ledSize = (adjusted.h - adjusted.y - size) / (300 - 204);
-    start = adjusted.y - ledSize * 2;
-    for (var i = 203; i < 300; i++) {
-        let pix = ctx.getImageData(adjusted.x + 2, start + adjusted.y + size + 2, size - 4, ledSize).data;
-        let colors = [];
-
-        for (var j = 0; j < pix.length; j += 4) {
-            colors[j / 4] = { r: pix[j], g: pix[j + 1], b: pix[j + 2], w: 0 };
-        }
-        data[i] = averageColors(colors);
-        start += ledSize;
-    }
-
-    ctx.lineWidth = _lineWidth;
-    ctx.strokeStyle = _style;
-
-    return data;
 }
 
-// Initial outline
-drawBorder();
+/**
+ * Represents a single LED of an entire LED strip
+ */
+class LED {
+    /**
+     * @param {int} indx The index of the LED relative to the entire LED strip
+     * @param {Color} color The color of the LED, using SK6812W color format (RGBW)
+     */
+    constructor(indx=0, color=Color.default) {
+        this.index = indx;
+        this.color = color;
+    }
 
-data = serialize();
-setInterval(function() {
-    var _data = serialize();
-    for (var i = 0; i < data.length; i++) {
-        let col1 = data[i], col2 = _data[i];
-        if (!colCompare(col1, col2)) {
-            let led = [i, col2.r, col2.g, col2.b, col2.w];
-            ledSocket.send(JSON.stringify(led));
+    get color() {
+        return this.color;
+    }
+
+    get index() {
+        return this.index;
+    }
+
+    /**
+     * Sets the index of the LED on the LED strip
+     * @param {int} num The new index this LED represnets on the LED strip
+     */
+    setIndex(num=0) {
+        this.num = num;
+    }
+
+    /**
+     * Sets the color. Note: If you're trying to create a white color, either set RGB to 0 and use the W channel, or
+     * set all RGB channels to the same value and it will set the W channel to those values.
+     * 
+     * @param {int} r Red component, 0-255 based
+     * @param {int} g Green compontent, 0-255 based
+     * @param {int} b Blue compontent, 0-255 based
+     * @param {int} w White compontent, 0-255 based
+     */
+    setColor(color=Color.default, notify=false) {
+        if (color.r == color.g && color.g == color.b) {
+            color.r = 0;
+            color.b = 0;
+            color.g = 0;
+            color.w = r; // uses less power to only power a single channel
+        }
+
+        this.color = color;
+        if (notify) {
+            // send new LED color over WebSocket
+        }
+    }
+}
+
+/**
+ * Represents a section of an entire LED strip. Useful for breaking up the strip into multiple shapes.
+ */
+class LEDSection {
+    /**
+     * @param {int} count How many LEDs this section represents out of the entire LED strip
+     * @param {int} offset The offset from the start of whole LED strip this section begins 
+     * @param {Direction} direction The direction this section of LEDs is oriented
+     */
+    constructor(count=50, offset=0, direction=0) {
+        this.count = count;
+        this.direction = direction;
+        this.leds = [];
+
+        for (let i = 0; i < count; i++) {
+            leds[i] = [new LED(i + offset), false];
         }
     }
 
-    data = _data;
-}, 500);
+    force_update() {
+        // send all LEDs regardless of if LEDs have been updated or not
+    }
+
+    update() {
+        // only send LEDs that have been updated
+    }
+
+    getLed(index=0) {
+        return leds[index];
+    }
+}
