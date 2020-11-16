@@ -80,6 +80,22 @@ class Color {
         return { r: this.r, g: this.g, b: this.b, w: this.w };
     }
 
+    get r() {
+        return this.r;
+    }
+
+    get g() {
+        return this.g;
+    }
+
+    get b() {
+        return this.b;
+    }
+
+    get w() {
+        return this.w();
+    }
+
     /**
      * Sets the color. 
      * 
@@ -154,18 +170,30 @@ class LED {
  */
 class LEDSection {
     /**
-     * @param {int} count How many LEDs this section represents out of the entire LED strip
+     * @param {int} size How many LEDs this section represents out of the entire LED strip
      * @param {int} offset The offset from the start of whole LED strip this section begins 
      * @param {Direction} direction The direction this section of LEDs is oriented
      */
-    constructor(count=50, offset=0, direction=0) {
-        this.count = count;
+    constructor(size=50, offset=0, direction=0) {
+        this.size = size;
         this.direction = direction;
         this.leds = [];
 
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < size; i++) {
             leds[i] = [new LED(i + offset), false];
         }
+    }
+
+    get leds() {
+        return this.leds;
+    }
+
+    get size() {
+        return this.size;
+    }
+
+    get direction() {
+        return this.direction;
     }
 
     force_update() {
@@ -174,6 +202,7 @@ class LEDSection {
 
     update() {
         // only send LEDs that have been updated
+        // format: leds = [ [led, hasBeenUpdated], [led, hasBeenUpdated], ...]
     }
 
     getLed(index=0) {
