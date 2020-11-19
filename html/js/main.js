@@ -80,22 +80,6 @@ class Color {
         return { r: this.r, g: this.g, b: this.b, w: this.w };
     }
 
-    get r() {
-        return this.r;
-    }
-
-    get g() {
-        return this.g;
-    }
-
-    get b() {
-        return this.b;
-    }
-
-    get w() {
-        return this.w();
-    }
-
     /**
      * Sets the color. 
      * 
@@ -123,14 +107,6 @@ class LED {
     constructor(indx=0, color=Color.default) {
         this.index = indx;
         this.color = color;
-    }
-
-    get color() {
-        return this.color;
-    }
-
-    get index() {
-        return this.index;
     }
 
     /**
@@ -176,24 +152,12 @@ class LEDSection {
      */
     constructor(size=50, offset=0, direction=0) {
         this.size = size;
-        this.direction = direction;
+        this.dir = direction;
         this.leds = [];
 
         for (let i = 0; i < size; i++) {
-            leds[i] = [new LED(i + offset), false];
+            this.leds[i] = [new LED(i + offset), false];
         }
-    }
-
-    get leds() {
-        return this.leds;
-    }
-
-    get size() {
-        return this.size;
-    }
-
-    get direction() {
-        return this.direction;
     }
 
     force_update() {
@@ -206,6 +170,36 @@ class LEDSection {
     }
 
     getLed(index=0) {
-        return leds[index];
+        return this.leds[index];
     }
 }
+
+/**
+ * Represents a 2D vector
+ */
+class Vector2 {
+    /**
+     * @param {Number} x The x direction of the vector 
+     * @param {Number} y The y direction of the vector
+     */
+    constructor(x=0, y=0) {
+        this.x = x;
+        this.y = y;
+    }
+
+    /** Returns the magnitude of the vector */
+    get mag() {
+        return Math.sqrt(this.x*this.x + this.y*this.y);
+    }
+
+    /** Returns a normalized version of the vector */
+    get normal() {
+        let m = this.mag;
+        return m > 0 ? new Vector2(this.x / m, this.y / m) : new Vector2(0, 1);
+    }
+}
+
+const sections = [];
+sections[0] = new LEDSection(100,   0, Direction.UP  );
+sections[1] = new LEDSection(100, 100, Direction.LEFT);
+sections[2] = new LEDSection(100, 200, Direction.DOWN);
