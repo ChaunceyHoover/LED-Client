@@ -56,7 +56,6 @@ const Direction = {
  */
 class Color {
     /**
-     * 
      * @param {int} r Red component, 0-255 based
      * @param {int} g Green compontent, 0-255 based
      * @param {int} b Blue compontent, 0-255 based
@@ -72,10 +71,17 @@ class Color {
     /** Default color = Black/Off */
     static default = { r: 0, g: 0, b: 0, w: 0 };
 
+    /** Returns a more easily serialized RGB value
+     * @returns An object with `r`, `g`, and `b`. 
+     */
     get rgb() {
         return { r: this.r, g: this.g, b: this.b };
     }
 
+    /** 
+     * Returns a more easily serialized RGBW value
+     * @returnsAn object with `r`, `g`, `b`, and `w`. 
+     */
     get rgbw() {
         return { r: this.r, g: this.g, b: this.b, w: this.w };
     }
@@ -160,15 +166,28 @@ class LEDSection {
         }
     }
 
+    /**
+     * Force syncs all the LEDs with the server
+     */
     force_update() {
         // send all LEDs regardless of if LEDs have been updated or not
     }
 
+    /**
+     * Updates all LEDs that have been changed since the last sync
+     * 
+     * LEDs format = [ [LED led, bool hasBeenUpdated], ... ]
+     */
     update() {
         // only send LEDs that have been updated
         // format: leds = [ [led, hasBeenUpdated], [led, hasBeenUpdated], ...]
     }
 
+    /**
+     * Gets a specific LED from this section.
+     * NOTE: Does not check if LED exists or not
+     * @param {int} index The index of the desired LED 
+     */
     getLed(index=0) {
         return this.leds[index];
     }
@@ -199,6 +218,7 @@ class Vector2 {
     }
 }
 
+// Should I put position in constructor? Default positions? Just set position after I create them?
 const sections = [];
 sections[0] = new LEDSection(100,   0, Direction.UP  );
 sections[1] = new LEDSection(100, 100, Direction.LEFT);
