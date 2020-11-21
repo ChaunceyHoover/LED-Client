@@ -23,12 +23,9 @@ body, p, h1, h2, h3, h4, h5, h6, a, span {
 }
 
 canvas {
-    position: absolute;
     border: 0px solid transparent;
     height: 100%;
     width: 100%;
-    top: 0;
-    left: 0;
 }
 
 button {

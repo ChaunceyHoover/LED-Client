@@ -3,11 +3,12 @@ const jControls = $('#controls');
 const jCanvas = $('#leds');
 const jColors = $('#colors');
 const jEraser = $('#eraser');
+const jBackground = $('#background');
 const canvas = jCanvas[0];
 const controls = jControls[0];
 const colorRow = jColors[0];
-const width = jCanvas.outerWidth();
-const height = jCanvas.outerHeight();
+const width = jBackground.outerWidth();
+const height = jBackground.outerHeight();
 const ctx = canvas.getContext('2d');
 
 // Configure canvas
@@ -148,16 +149,45 @@ class LED {
 }
 
 /**
+ * Represents a 2D vector
+ */
+class Vector2 {
+    /**
+     * @param {Number} x The x direction of the vector 
+     * @param {Number} y The y direction of the vector
+     */
+    constructor(x=0, y=0) {
+        this.x = x;
+        this.y = y;
+    }
+
+    /** Returns the magnitude of the vector */
+    get mag() {
+        return Math.sqrt(this.x*this.x + this.y*this.y);
+    }
+
+    /** Returns a normalized version of the vector */
+    get normal() {
+        let m = this.mag;
+        return m > 0 ? new Vector2(this.x / m, this.y / m) : new Vector2(0, 1);
+    }
+}
+
+/**
  * Represents a section of an entire LED strip. Useful for breaking up the strip into multiple shapes.
  */
 class LEDSection {
     /**
-     * @param {int} size How many LEDs this section represents out of the entire LED strip
+     * @param {int} count How many LEDs this section represents out of the entire LED strip
+     * @param {Vector2} size The size of the rectangle to be rendered on screen, in percentages
+     * @param {Vector2} position The position of the rectangle to be rendered on screen, in percentages
      * @param {int} offset The offset from the start of whole LED strip this section begins 
      * @param {Direction} direction The direction this section of LEDs is oriented
      */
-    constructor(size=50, offset=0, direction=0) {
+    constructor(count=50, offset=0, size=new Vector2(), position=new Vector2(), direction=0) {
+        this.count = count;
         this.size = size;
+        this.pos = position;
         this.dir = direction;
         this.leds = [];
 
@@ -193,33 +223,22 @@ class LEDSection {
     }
 }
 
-/**
- * Represents a 2D vector
- */
-class Vector2 {
-    /**
-     * @param {Number} x The x direction of the vector 
-     * @param {Number} y The y direction of the vector
-     */
-    constructor(x=0, y=0) {
-        this.x = x;
-        this.y = y;
-    }
+const sections = [];
+sections[0] = new LEDSection(100, 0, new Vector2(0.03, 0.8), new Vector2(0.9, 0.15), Direction.UP);
+sections[1] = new LEDSection(100, 100, new Vector2(0.8, 0.075), new Vector2(0.1, 0.075),  Direction.LEFT);
+sections[2] = new LEDSection(100, 200, new Vector2(0.03, 0.8), new Vector2(0.07, 0.15), Direction.DOWN);
 
-    /** Returns the magnitude of the vector */
-    get mag() {
-        return Math.sqrt(this.x*this.x + this.y*this.y);
-    }
+function render() {
+    ctx.clearRect(0, 0, width, height);
+    for (let i = 0; i < sections.length; i++) {
+        let section = sections[i];
 
-    /** Returns a normalized version of the vector */
-    get normal() {
-        let m = this.mag;
-        return m > 0 ? new Vector2(this.x / m, this.y / m) : new Vector2(0, 1);
+        ctx.strokeRect(section.pos.x * width, section.pos.y * height, 
+            section.size.x * width, section.size.y * height);
     }
 }
 
-// Should I put position in constructor? Default positions? Just set position after I create them?
-const sections = [];
-sections[0] = new LEDSection(100,   0, Direction.UP  );
-sections[1] = new LEDSection(100, 100, Direction.LEFT);
-sections[2] = new LEDSection(100, 200, Direction.DOWN);
+render();
+
+// TODO: Make LEDSection render LEDs by evenly dividing the rectangle up
+// Possible idea: Make minimum size so people can't make tiny squares?
