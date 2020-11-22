@@ -41,6 +41,8 @@ document.body.addEventListener("touchmove", function (e) {
     }
 }, false);
 
+const mouse = { x: 0, y: 0 };
+
 /**
  * Represents the orientation of an LED section. If the direction is `UP`/`1`, then the bottom
  * of the section will represent the start of the LEDs and the top of the shape will represent the end
@@ -161,6 +163,22 @@ class Vector2 {
         this.y = y;
     }
 
+    /**
+     * Returns a new Vector2 with the `x` and `y` values multiplied by `n`
+     * @param {int} n The 
+     */
+    mult(n=1) {
+        return new Vector2(this.x * n, this.y * n)
+    }
+
+    /**
+     * Returns a new Vector2 with the `x` and `y` values divided by `n`
+     * @param {Number} n The number to divide both the `x` and `y` values of the vector
+     */
+    div(n=1) {
+        return new Vector2(this.x / n, this.y / n);
+    }
+
     /** Returns the magnitude of the vector */
     get mag() {
         return Math.sqrt(this.x*this.x + this.y*this.y);
@@ -169,7 +187,7 @@ class Vector2 {
     /** Returns a normalized version of the vector */
     get normal() {
         let m = this.mag;
-        return m > 0 ? new Vector2(this.x / m, this.y / m) : new Vector2(0, 1);
+        return m > 0 ? this.div(m) : new Vector2(0, 1);
     }
 }
 
@@ -191,7 +209,7 @@ class LEDSection {
         this.dir = direction;
         this.leds = [];
 
-        for (let i = 0; i < size; i++) {
+        for (let i = 0; i < count; i++) {
             this.leds[i] = [new LED(i + offset), false];
         }
     }
@@ -224,21 +242,106 @@ class LEDSection {
 }
 
 const sections = [];
-sections[0] = new LEDSection(100, 0, new Vector2(0.03, 0.8), new Vector2(0.9, 0.15), Direction.UP);
-sections[1] = new LEDSection(100, 100, new Vector2(0.8, 0.075), new Vector2(0.1, 0.075),  Direction.LEFT);
-sections[2] = new LEDSection(100, 200, new Vector2(0.03, 0.8), new Vector2(0.07, 0.15), Direction.DOWN);
+sections[0] = new LEDSection(100,   0, new Vector2(0.03, 0.8),   new Vector2(0.90, 0.15),  Direction.UP);
+sections[1] = new LEDSection(100, 100, new Vector2( 0.8, 0.075), new Vector2(0.10, 0.075), Direction.LEFT);
+sections[2] = new LEDSection(100, 200, new Vector2(0.03, 0.8),   new Vector2(0.07, 0.15),  Direction.DOWN);
 
+/**
+ * Renders all the `LEDSection`s on the screen
+ */
 function render() {
-    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = 'rgb(48, 48, 48)';
+    ctx.strokeStyle = 'black';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)'
+
     for (let i = 0; i < sections.length; i++) {
         let section = sections[i];
+        let _ledSize = section.size.div(section.count);
+        
+
+        switch(section.dir) {
+            case Direction.UP:
+            case Direction.DOWN:
+                for (let y = 0; y < section.count; y++) {
+                    let _led = section.getLed(y);
+                    ctx.fillStyle = `rgb(${_led.r}, ${_led.g}, ${_led.b})`;
+                    ctx.strokeRect(section.pos.x * width, (section.pos.y * height) + (_ledSize.mult(y).y * height),
+                                section.size.x * width, _ledSize.y * height);
+                }
+                break;
+            case Direction.LEFT:
+            case Direction.RIGHT:
+                for (let x = 0; x < section.count; x++) {
+                    ctx.strokeRect((section.pos.x * width) + (_ledSize.mult(x).x * width), section.pos.y * height,
+                                _ledSize.x * width, section.size.y * height);
+                }
+                break;
+            default: break;
+        }
 
         ctx.strokeRect(section.pos.x * width, section.pos.y * height, 
             section.size.x * width, section.size.y * height);
     }
 }
 
+function onDrag() {
+    for (let i = 0; i < sections.length; i++) {
+        let section = sections[i];
+        for (let j = 0; j < section.count; j++) {
+            switch(section.dir) {
+                case Direction.LEFT:
+                    let _start = section.pos;
+                    let _ledSize = section.size.div(section.count);
+                    console.log(`mouse: ${mouse.x}, ${mouse.y}`);
+                    console.log(`start: ${_start.x}, ${_start.y}`);
+                    console.log(`bound: ${_start.x + _ledSize.x}, ${_start.y + _ledSize.y}`);
+                    console.log(`scale: ${_start.x * width}, $`)
+                    
+                    if (mouse.x < _start.x * width && mouse.x > (_start.x + _ledSize.x) * width) {
+                        section.getLed(j).setColor(255);
+                    }
+                    break;
+                case Direction.RIGHT:
+
+                    break;
+                case Direction.UP:
+
+                    break;
+                case Direction.DOWN:
+
+                    break;
+                default: break;
+            }
+        }
+    }
+}
+
 render();
+
+// Update mouse position
+canvas.addEventListener('mousemove', function(e) {
+    mouse.x = e.pageX - this.offsetLeft;
+    mouse.y = e.pageY - this.offsetTop;
+}, false);
+canvas.addEventListener('touchmove', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    mouse.x = e.touches[0].clientX - rect.left;
+    mouse.y = e.touches[0].clientY - rect.top;
+}, false);
+
+canvas.addEventListener('mousedown', function() {
+    canvas.addEventListener('mousemove', onDrag, false);
+}, false);
+canvas.addEventListener('touchstart', function() {}, false);
+    canvas.addEventListener('touchmove', onDrag, false);
+canvas.addEventListener('mouseup', function() {
+    canvas.removeEventListener('mousemove', onDrag, false);
+}, false);
+canvas.addEventListener('touched', function() {
+    canvas.removeEventListener('touchmove', onDrag, false);
+}, false);
 
 // TODO: Make LEDSection render LEDs by evenly dividing the rectangle up
 // Possible idea: Make minimum size so people can't make tiny squares?
