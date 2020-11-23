@@ -41,6 +41,7 @@ document.body.addEventListener("touchmove", function (e) {
     }
 }, false);
 
+// Relevant mouse info
 const mouse = { x: 0, y: 0 };
 
 /**
@@ -164,6 +165,14 @@ class Vector2 {
     }
 
     /**
+     * Returns a new Vector2 with the `x` and `y` values added by the given Vector2's `x` and `y`
+     * @param {Vector2} n Adds another vector's `x` and `y` values to this vector's `x` and `y` values
+     */
+    add(n=new Vector2()) {
+        return new Vector2(this.x + n.x, this.y + n.y);
+    }
+
+    /**
      * Returns a new Vector2 with the `x` and `y` values multiplied by `n`
      * @param {int} n The 
      */
@@ -237,7 +246,7 @@ class LEDSection {
      * @param {int} index The index of the desired LED 
      */
     getLed(index=0) {
-        return this.leds[index];
+        return this.leds[index][0];
     }
 }
 
@@ -253,28 +262,28 @@ function render() {
     ctx.fillStyle = 'rgb(48, 48, 48)';
     ctx.strokeStyle = 'black';
     ctx.fillRect(0, 0, width, height);
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0)'
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
 
     for (let i = 0; i < sections.length; i++) {
         let section = sections[i];
         let _ledSize = section.size.div(section.count);
-        
 
         switch(section.dir) {
             case Direction.UP:
             case Direction.DOWN:
                 for (let y = 0; y < section.count; y++) {
                     let _led = section.getLed(y);
-                    ctx.fillStyle = `rgb(${_led.r}, ${_led.g}, ${_led.b})`;
-                    ctx.strokeRect(section.pos.x * width, (section.pos.y * height) + (_ledSize.mult(y).y * height),
+                    ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
+                    ctx.fillRect(section.pos.x * width, (section.pos.y * height) + (_ledSize.mult(y).y * height),
                                 section.size.x * width, _ledSize.y * height);
                 }
                 break;
             case Direction.LEFT:
             case Direction.RIGHT:
                 for (let x = 0; x < section.count; x++) {
-                    ctx.strokeRect((section.pos.x * width) + (_ledSize.mult(x).x * width), section.pos.y * height,
+                    let _led = section.getLed(x);
+                    ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
+                    ctx.fillRect((section.pos.x * width) + (_ledSize.mult(x).x * width), section.pos.y * height,
                                 _ledSize.x * width, section.size.y * height);
                 }
                 break;
@@ -289,28 +298,28 @@ function render() {
 function onDrag() {
     for (let i = 0; i < sections.length; i++) {
         let section = sections[i];
+        let _start = section.pos;
+        let _ledSize = section.size.div(section.count);
+
         for (let j = 0; j < section.count; j++) {
+            let _ledPos = _start.add(_ledSize.mult(j));
+
             switch(section.dir) {
                 case Direction.LEFT:
-                    let _start = section.pos;
-                    let _ledSize = section.size.div(section.count);
-                    console.log(`mouse: ${mouse.x}, ${mouse.y}`);
-                    console.log(`start: ${_start.x}, ${_start.y}`);
-                    console.log(`bound: ${_start.x + _ledSize.x}, ${_start.y + _ledSize.y}`);
-                    console.log(`scale: ${_start.x * width}, $`)
-                    
-                    if (mouse.x < _start.x * width && mouse.x > (_start.x + _ledSize.x) * width) {
-                        section.getLed(j).setColor(255);
+                case Direction.RIGHT:
+                    if (mouse.x > _ledPos.x * width && mouse.x < (_ledPos.x + _ledSize.x) * width
+                        && mouse.y > _start.y * height && mouse.y < (_start.y + section.size.y) * height) {
+                            section.getLed(j).setColor(new Color(255, 0, 0));
+                            render();
                     }
                     break;
-                case Direction.RIGHT:
-
-                    break;
                 case Direction.UP:
-
-                    break;
                 case Direction.DOWN:
-
+                    if (mouse.x > _start.x * width && mouse.x < (_start.x + section.size.x) * width
+                        && mouse.y > _ledPos.y * height && mouse.y < (_ledPos.y + _ledSize.y) * height) {
+                            section.getLed(j).setColor(new Color(255, 0, 0));
+                            render();
+                        }
                     break;
                 default: break;
             }
@@ -331,15 +340,23 @@ canvas.addEventListener('touchmove', function(e) {
     mouse.y = e.touches[0].clientY - rect.top;
 }, false);
 
+// mouse / touch start
 canvas.addEventListener('mousedown', function() {
+    console.log('registering mouse move event');
     canvas.addEventListener('mousemove', onDrag, false);
 }, false);
-canvas.addEventListener('touchstart', function() {}, false);
+canvas.addEventListener('touchstart', function() {
+    console.log('registering touch event');
     canvas.addEventListener('touchmove', onDrag, false);
+}, false);
+
+// mouse / touch end
 canvas.addEventListener('mouseup', function() {
+    console.log('removing mouse move event');
     canvas.removeEventListener('mousemove', onDrag, false);
 }, false);
 canvas.addEventListener('touched', function() {
+    console.log('removing touch event');
     canvas.removeEventListener('touchmove', onDrag, false);
 }, false);
 
