@@ -211,15 +211,19 @@ class LEDSection {
      * @param {int} offset The offset from the start of whole LED strip this section begins 
      * @param {Direction} direction The direction this section of LEDs is oriented
      */
-    constructor(count=50, offset=0, size=new Vector2(), position=new Vector2(), direction=0) {
+    constructor(count=50, offset=0, size=new Vector2(), position=new Vector2(), direction=Direction.UP) {
         this.count = count;
         this.size = size;
         this.pos = position;
         this.dir = direction;
         this.leds = [];
 
+        // `UP`/`LEFT` sections are ordered backwards, so the individual `LED`s have reversed index order. However,
+        // the `LED`s still get stored in the `leds` array in the same order, regardless of their index/offset/direction.
+        // i.e. the `leds` array is just a container, and each `LED` has actual index of itself on the physical LED strip.
         for (let i = 0; i < count; i++) {
-            this.leds[i] = [new LED(i + offset), false];
+            let indx = direction == Direction.UP || direction == Direction.LEFT ? (count - i) + offset : i + offset;
+            this.leds[i] = [new LED(indx), false];
         }
     }
 
@@ -251,9 +255,9 @@ class LEDSection {
 }
 
 const sections = [];
-sections[0] = new LEDSection(100,   0, new Vector2(0.03, 0.8),   new Vector2(0.90, 0.15),  Direction.UP);
-sections[1] = new LEDSection(100, 100, new Vector2( 0.8, 0.075), new Vector2(0.10, 0.075), Direction.LEFT);
-sections[2] = new LEDSection(100, 200, new Vector2(0.03, 0.8),   new Vector2(0.07, 0.15),  Direction.DOWN);
+sections[0] = new LEDSection(100,   0, new Vector2(0.03, 0.800), new Vector2(0.90, 0.150),   Direction.UP);
+sections[1] = new LEDSection(100, 100, new Vector2(0.80, 0.075), new Vector2(0.10, 0.075), Direction.LEFT);
+sections[2] = new LEDSection(100, 200, new Vector2(0.03, 0.800), new Vector2(0.07, 0.150), Direction.DOWN);
 
 /**
  * Renders all the `LEDSection`s on the screen
