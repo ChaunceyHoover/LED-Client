@@ -56,33 +56,32 @@ button {
 }
 
 #controls {
-    background-color: gray;
+    position: relative;
+}
+
+#controls > div {
+    position: absolute;
+    transition: left 0.5s linear;
+}
+
+#main {
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#test {
+    left: 100%;
+    width: 100%;
+    height: 100%;
+}
+
+#main {
     display: flex;
-    flex-flow: column nowrap;
-    margin: 0;
-    padding: 0;
+    flex-flow: row nowrap;
 }
 
-#colors, #presets {
-    display: flex;
-    justify-content: space-between;
-}
-
-#colors {
-    flex-grow: 2;
-}
-#presets { 
+#main > button {
+    border-radius: 0;
     flex-grow: 1;
-}
-
-#colors > .color, #presets > button {
-    color: white;
-    background-color: white;
-    flex-grow: 1;
-    margin: 1%;
-}
-
-button > img {
-    width: 2.5em;
-    height: 2.5em;
 }
