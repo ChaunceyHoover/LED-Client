@@ -263,19 +263,25 @@ sections[2] = new LEDSection(100, 200, new Vector2(0.03, 0.800), new Vector2(0.0
  * Renders all the `LEDSection`s on the screen
  */
 function render() {
+    // Reset color settings & draw grey background
     ctx.fillStyle = 'rgb(48, 48, 48)';
     ctx.strokeStyle = 'black';
     ctx.fillRect(0, 0, width, height);
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0)';
 
     for (let i = 0; i < sections.length; i++) {
         let section = sections[i];
         let _ledSize = section.size.div(section.count);
+        // note: `_ledSize` has both the `x` and `y` values divided, so it only represent the dynamic
+        // size of each LED (i.e. the part that is made from equally dividing the section into `count` parts).
+        // the static size comes from the `size` value of each `LEDSection`.
 
         switch(section.dir) {
             case Direction.UP:
             case Direction.DOWN:
                 for (let y = 0; y < section.count; y++) {
+                    // Static width (width of section), dynamic height (equally divided sections)
                     let _led = section.getLed(y);
                     ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
                     ctx.fillRect(section.pos.x * width, (section.pos.y * height) + (_ledSize.mult(y).y * height),
@@ -285,6 +291,7 @@ function render() {
             case Direction.LEFT:
             case Direction.RIGHT:
                 for (let x = 0; x < section.count; x++) {
+                    // Dynamic width, static height
                     let _led = section.getLed(x);
                     ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
                     ctx.fillRect((section.pos.x * width) + (_ledSize.mult(x).x * width), section.pos.y * height,
@@ -293,9 +300,6 @@ function render() {
                 break;
             default: break;
         }
-
-        ctx.strokeRect(section.pos.x * width, section.pos.y * height, 
-            section.size.x * width, section.size.y * height);
     }
 }
 
@@ -304,10 +308,12 @@ function onDrag() {
         let section = sections[i];
         let _start = section.pos;
         let _ledSize = section.size.div(section.count);
+        // see function `render` for note on `_ledSize`
 
         for (let j = 0; j < section.count; j++) {
             let _ledPos = _start.add(_ledSize.mult(j));
-
+            
+            // check if mouse is within bounds of `LED`, based off orientation of `LEDSection`
             switch(section.dir) {
                 case Direction.LEFT:
                 case Direction.RIGHT:
@@ -346,23 +352,16 @@ canvas.addEventListener('touchmove', function(e) {
 
 // mouse / touch start
 canvas.addEventListener('mousedown', function() {
-    console.log('registering mouse move event');
     canvas.addEventListener('mousemove', onDrag, false);
 }, false);
 canvas.addEventListener('touchstart', function() {
-    console.log('registering touch event');
     canvas.addEventListener('touchmove', onDrag, false);
 }, false);
 
 // mouse / touch end
 canvas.addEventListener('mouseup', function() {
-    console.log('removing mouse move event');
     canvas.removeEventListener('mousemove', onDrag, false);
 }, false);
 canvas.addEventListener('touched', function() {
-    console.log('removing touch event');
     canvas.removeEventListener('touchmove', onDrag, false);
 }, false);
-
-// TODO: Make LEDSection render LEDs by evenly dividing the rectangle up
-// Possible idea: Make minimum size so people can't make tiny squares?
