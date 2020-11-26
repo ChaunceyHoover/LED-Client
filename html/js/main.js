@@ -1,12 +1,28 @@
-// DOM element
+/** Controls container */
 const jControls = $('#controls');
+/** Drawing area */
 const jCanvas = $('#leds');
-const jColors = $('#colors');
-const jEraser = $('#eraser');
+/** Background behind canvas */
 const jBackground = $('#background');
+/** Main menu container (inside controls container) */
+const jMain = $('#main');
+/** Draw menu container (draw controls inside container) */
+const jDraw = $('#draw');
+/** Colors menu container (color picker inside container) */
+const jColor = $('#color');
+/** Presets menu container (presets inside container) */
+const jPresets = $('#presets');
+/** Draw button in main menu */
+const jDrawBtn = $('#draw-btn');
+/** Preset button in main menu */
+const jPresetBtn = $('#preset-btn');
+/** Clear button in main menu */
+const jClearBtn = $('#clear-btn');
+/** canvas DOM element */
 const canvas = jCanvas[0];
+/** controls DOM element */
 const controls = jControls[0];
-const colorRow = jColors[0];
+
 const width = jBackground.outerWidth();
 const height = jBackground.outerHeight();
 const ctx = canvas.getContext('2d');
@@ -53,6 +69,16 @@ const Direction = {
     RIGHT: 2,
     DOWN: 3,
     LEFT: 4
+}
+
+/**
+ * Represents all the possible menus 
+ */
+const Menu = {
+    MAIN: 0,
+    DRAW: 1,
+    PRESETS: 2,
+    COLOR: 3
 }
 
 /**
@@ -303,6 +329,10 @@ function render() {
     }
 }
 
+/**
+ * Calls when the mouse is moving while holding down M1 / touch. Handles logic for
+ * drawing.
+ */
 function onDrag() {
     for (let i = 0; i < sections.length; i++) {
         let section = sections[i];
@@ -337,6 +367,49 @@ function onDrag() {
     }
 }
 
+/**
+ * Changes the current menu
+ * @param {Menu} menu The menu to change to
+ */
+function setMenu(menu=Menu.MAIN) {
+    switch(menu) {
+        case Menu.MAIN:
+            jMain.css('left', '0');
+            jDraw.css('left', '-100%');
+            jDraw.css('top', '0');
+            jPresets.css('left', '100%');
+            jColor.css('left', '-100%');
+            jColor.css('top', '100%');
+            break;
+        case Menu.DRAW:
+            jMain.css('left', '100%');
+            jDraw.css('left', '0');
+            jDraw.css('top', '0');
+            jPresets.css('left', '200%');
+            jColor.css('left', '0');
+            jColor.css('top', '100%');
+            break;
+        case Menu.PRESETS:
+            jMain.css('left', '-100%');
+            jDraw.css('left', '-200%');
+            jDraw.css('top', '0');
+            jPresets.css('left', '0');
+            jColor.css('left', '-200%');
+            jColor.css('top', '100%');
+            break;
+        case Menu.COLOR:
+            jMain.css('left', '100%');
+            jDraw.css('left', '0');
+            jDraw.css('top', '-100%');
+            jPresets.css('left', '200%');
+            jColor.css('left', '0');
+            jColor.css('top', '0');
+        default:
+            console.error(`invalid menu given [${menu}]`); 
+            break;
+    }
+}
+
 render();
 
 // Update mouse position
@@ -365,3 +438,7 @@ canvas.addEventListener('mouseup', function() {
 canvas.addEventListener('touched', function() {
     canvas.removeEventListener('touchmove', onDrag, false);
 }, false);
+
+// menu buttons
+jDrawBtn.click(function() { setMenu(Menu.DRAW); });
+jPresetBtn.click(function() { setMenu(Menu.PRESETS); });
