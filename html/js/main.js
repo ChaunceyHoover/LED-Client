@@ -163,16 +163,10 @@ class LED {
      * @param {int} w White compontent, 0-255 based
      */
     setColor(color=Color.default, notify=false) {
-        if (color.r == color.g && color.g == color.b) {
-            color.r = 0;
-            color.b = 0;
-            color.g = 0;
-            color.w = r; // uses less power to only power a single channel
-        }
-
         this.color = color;
         if (notify) {
             // send new LED color over WebSocket
+            ledSocket.send(JSON.stringify([this.index, this.color.r, this.color.g, this.color.b, this.color.w]));
         }
     }
 }
@@ -248,7 +242,7 @@ class LEDSection {
         // the `LED`s still get stored in the `leds` array in the same order, regardless of their index/offset/direction.
         // i.e. the `leds` array is just a container, and each `LED` has actual index of itself on the physical LED strip.
         for (let i = 0; i < count; i++) {
-            let indx = direction == Direction.UP || direction == Direction.LEFT ? (count - i) + offset : i + offset;
+            let indx = direction == Direction.UP || direction == Direction.LEFT ? (count - i - 1) + offset : i + offset;
             this.leds[i] = [new LED(indx), false];
         }
     }
@@ -281,9 +275,11 @@ class LEDSection {
 }
 
 const sections = [];
-sections[0] = new LEDSection(100,   0, new Vector2(0.03, 0.800), new Vector2(0.90, 0.150),   Direction.UP);
-sections[1] = new LEDSection(100, 100, new Vector2(0.80, 0.075), new Vector2(0.10, 0.075), Direction.LEFT);
-sections[2] = new LEDSection(100, 200, new Vector2(0.03, 0.800), new Vector2(0.07, 0.150), Direction.DOWN);
+sections[0] = new LEDSection(101,   0, new Vector2(0.03, 0.800), new Vector2(0.90, 0.150),   Direction.UP);
+sections[1] = new LEDSection(101, 101, new Vector2(0.80, 0.075), new Vector2(0.10, 0.075), Direction.LEFT);
+sections[2] = new LEDSection( 98, 202, new Vector2(0.03, 0.800), new Vector2(0.07, 0.150), Direction.DOWN);
+
+let drawColor = new Color(255, 0, 255);
 
 /**
  * Renders all the `LEDSection`s on the screen
@@ -309,7 +305,10 @@ function render() {
                 for (let y = 0; y < section.count; y++) {
                     // Static width (width of section), dynamic height (equally divided sections)
                     let _led = section.getLed(y);
-                    ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
+                    if (_led.color.r == _led.color.g && _led.color.g == _led.color.b && _led.color.r == 0)
+                        ctx.fillStyle = `rgb(${_led.color.w}, ${_led.color.w}, ${_led.color.w})`;
+                    else
+                        ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
                     ctx.fillRect(section.pos.x * width, (section.pos.y * height) + (_ledSize.mult(y).y * height),
                                 section.size.x * width, _ledSize.y * height);
                 }
@@ -319,7 +318,10 @@ function render() {
                 for (let x = 0; x < section.count; x++) {
                     // Dynamic width, static height
                     let _led = section.getLed(x);
-                    ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
+                    if (_led.color.r == _led.color.g && _led.color.g == _led.color.b && _led.color.r == 0)
+                        ctx.fillStyle = `rgb(${_led.color.w}, ${_led.color.w}, ${_led.color.w})`;
+                    else
+                        ctx.fillStyle = `rgb(${_led.color.r}, ${_led.color.g}, ${_led.color.b})`;
                     ctx.fillRect((section.pos.x * width) + (_ledSize.mult(x).x * width), section.pos.y * height,
                                 _ledSize.x * width, section.size.y * height);
                 }
@@ -349,7 +351,7 @@ function onDrag() {
                 case Direction.RIGHT:
                     if (mouse.x > _ledPos.x * width && mouse.x < (_ledPos.x + _ledSize.x) * width
                         && mouse.y > _start.y * height && mouse.y < (_start.y + section.size.y) * height) {
-                            section.getLed(j).setColor(new Color(255, 0, 0));
+                            section.getLed(j).setColor(drawColor, true);
                             render();
                     }
                     break;
@@ -357,7 +359,7 @@ function onDrag() {
                 case Direction.DOWN:
                     if (mouse.x > _start.x * width && mouse.x < (_start.x + section.size.x) * width
                         && mouse.y > _ledPos.y * height && mouse.y < (_ledPos.y + _ledSize.y) * height) {
-                            section.getLed(j).setColor(new Color(255, 0, 0));
+                            section.getLed(j).setColor(drawColor, true);
                             render();
                         }
                     break;
@@ -442,3 +444,10 @@ canvas.addEventListener('touched', function() {
 // menu buttons
 jDrawBtn.click(function() { setMenu(Menu.DRAW); });
 jPresetBtn.click(function() { setMenu(Menu.PRESETS); });
+jClearBtn.click(function() {
+    sections.forEach(function(section) {
+        for (let i = 0; i < section.size; i++) {
+            section.getLed(i).setColor(new Color(0, 0, 0, 0), true);
+        }
+    });
+});
