@@ -450,4 +450,5 @@ jClearBtn.click(function() {
             section.getLed(i).setColor(new Color(0, 0, 0, 0), true);
         }
     });
+    ledSocket.send('z');
 });

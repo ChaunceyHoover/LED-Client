@@ -65,20 +65,8 @@ button {
     transition: left 0.8s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);
 }
 
-#back {
-    width: 32px;
-    height: 32px;
-    top: -32px;
-
-    /* only needed while using <span> */
-    display: block; 
-    background-color: white;
-    color: red;
-    position: absolute;
-    text-align: center;
-    font-weight: bold;
-    border: solid 1px black;
-    box-sizing: border-box;
+.back {
+    width: 16px;
 }
 
 #main {
@@ -92,7 +80,7 @@ button {
 #main > button {
     border-radius: 0;
     flex-grow: 1;
-    font-size: 4em;
+    font-size: 7vw;
 }
 
 #presets {
@@ -106,6 +94,10 @@ button {
     left: -100%;
     width: 100%;
     height: 100%;
+}
+
+#draw-tools-row-container > div > img {
+    width: 64px;
 }
 
 #color {
