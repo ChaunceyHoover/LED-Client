@@ -1,21 +1,22 @@
+/* Global changes */
 html, body {
-    margin: 0;
+	margin: 0;
 	padding: 0;
 	height: 100%;
 	display: flex;
-    flex-flow: column;
-    overflow: hidden;
+	flex-flow: column;
+	overflow: hidden;
 }
 
 body {
-    display: flex;
-    flex-flow: column nowrap;
+	display: flex;
+	flex-flow: column nowrap;
 }
 
 *, *:before, *:after {
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
 }
 
 body, p, h1, h2, h3, h4, h5, h6, a, span {
@@ -23,86 +24,211 @@ body, p, h1, h2, h3, h4, h5, h6, a, span {
 }
 
 canvas {
-    border: 0px solid transparent;
-    height: 100%;
-    width: 100%;
+	border: 0px solid transparent;
+	height: 100%;
+	width: 100%;
 }
 
 button {
-    border: 0;
-    background: none;
-    box-shadow: none;
-    border-radius: 0;
+	border: 0;
+	background: none;
+	box-shadow: none;
+	border-radius: 0;
 }
 
+/* Global "Bootstrap-like" classes that can be applied to elements */
+.small-icon {
+	width: 2.5vh;
+}
+
+/* Page container - main tag */
 .app-container {
-    height: calc(100%);
-    position: relative;
+	height: calc(100%);
+	position: relative;
 }
 
 .app-container > :first-child {
-    min-height: 75%;
-    max-height: 75%;
+	min-height: 75%;
+	max-height: 75%;
 }
 .app-container > :last-child {
-    min-height: 25%;
-    max-height: 25%;
-    border-top: 2px solid black;
+	min-height: 25%;
+	max-height: 25%;
+	border-top: 2px solid black;
 }
 
+/* Container for canvas */
+#background {
+	position: relative;
+}
+
+/* Container for "Back" button on left side */
+#back-left-container {
+	width: 3vh;
+	height: 3vh;
+	padding: 0 0.5vw;
+	position: absolute;
+	bottom: 0vw;
+	overflow: hidden;
+	background-color: white;
+	border: 1px solid black;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: height 0.4s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);
+	-webkit-transition: height 0.4s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);
+	-moz-transition: height 0.4s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);
+	-o-transition: height 0.4s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);
+}
+
+/* "Back" button on left side */
+#back-left {
+	padding-right: 2px;
+}
+
+/* Caonvas inside of #background container */
 #canvas {
-    background-color: chocolate;
-    position: relative;
+	background-color: chocolate;
+	position: relative;
 }
 
+/* Everything at the bottom of the page */
 #controls {
-    position: relative;
-    overflow: hidden;
+	position: relative;
+	overflow: hidden;
 }
 
 #controls > div {
-    position: absolute;
-    transition: left 0.8s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);
+	position: absolute;
+	transition: left 0.8s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);
+	-webkit-transition: left 0.8s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);;
+	-moz-transition: left 0.8s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);;
+	-o-transition: left 0.8s cubic-bezier(.55,.01,.51,1.22),top 0.8s cubic-bezier(.55,.01,.51,1.22);;
 }
 
-.back {
-    width: 16px;
-}
-
+/* Main view for controls (page with Draw, Presets, Clear buttons */
 #main {
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-flow: row nowrap;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-flow: row nowrap;
 }
 
 #main > button {
-    border-radius: 0;
-    flex-grow: 1;
-    font-size: 7vw;
+	border-radius: 0;
+	flex-grow: 1;
+	font-size: 7vw;
 }
 
-#presets {
-    left: 100%;
-    width: 100%;
-    height: 100%;
-}
-
+/* Draw menu */
 #draw {
-    position: relative;
-    left: -100%;
-    width: 100%;
-    height: 100%;
+	position: relative;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	display: flex;
+}
+
+#draw > div {
+	flex-grow: 1;
+}
+
+/* Presets menu */
+#presets {
+	left: 100%;
+	width: 100%;
+	height: 100%;
+}
+
+/* Contains 4 tools on draw menu (Paint, Fill, Eraser, Trash/Erase all) */
+#draw-tools-container {
+	align-items: center;
+	display: flex;
+	height: 100%;
+	padding: 0;
+}
+
+#draw-tools-row-container { 
+	width: 100%;
+	height: 100%;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+#draw-tools-row-container > * {
+	display: flex;
+	justify-content: space-around;
+	padding: 0;
+}
+
+@media screen and (max-width: 991px) {
+	#draw-tools-row1 {
+		margin-top: 1vh;
+	}
+	#draw-tools-row2 {
+		margin-bottom: 0.5vh;
+	}
 }
 
 #draw-tools-row-container > div > img {
-    width: 64px;
+	width: 8vw;
+}
+
+#draw-tools-presets-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+#draw-tools-presets-container > div {
+	display: flex;
+	height: 33.3333%;
+}
+
+#draw-tools-preset-row1 {
+	display: flex;
+	padding: 1vw;
+}
+
+#draw-quick-colors {
+	flex-grow: 1;
+	border: 1px solid black;
+	border-radius: 2px;
+}
+
+#draw-tools-preset-row2 {
+	display: flex;
+	justify-content: space-around;
+	padding-right: 1vw;
+}
+
+#draw-tools-preset-row2 > input {
+	width: 80%;
+}
+
+#draw-quick-colors {
+	background-color: grey;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+}
+
+#draw-quick-colors > * {
+	width: 4vw;
+	height: 100%;
+	background-color: brown;
+	color: white;
+}
+
+#custom-color-btn {
+	margin: 1vw;
+	width: 100%;
 }
 
 #color {
-    left: -100%;
-    top: -100%;
-    width: 100%;
-    height: 100%;
+	left: -100%;
+	top: -100%;
+	width: 100%;
+	height: 100%;
 }

@@ -1,75 +1,84 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>LED controller</title>
+	<head>
+		<title>LED controller</title>
 
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <link rel="stylesheet" href="css/bootstrap.min.css">
-        <link rel="stylesheet" href="css/main.css">
-    </head>
-    <body>
-        <main class="app-container">
-            <section id="background">
-                <canvas id="leds"></canvas>
-                <!-- v1: 3 "dynamic" rectangles created via JS [✓]
-                     v2: n dynamic rectangles created via JS & can be edited. Can also create/destroy rectangles. [ ]
-                         (Each rectangle represents a set of LEDs determined when it is created.) 
-                     v3: Create different views per device -->
-                
-            </section>
-            <section id="controls">
-                <!-- Controls -->
-                <div id="main">
-                    <button id="draw-btn" type="button" class="btn btn-secondary">Draw</button>
-                    <button id="preset-btn" type="button" class="btn btn-secondary">Presets</button>
-                    <button id="clear-btn" type="button" class="btn btn-secondary">Clear</button>
-                </div>
-                <div id="draw">
-                    <div id="draw-controls">
-                        <div id="draw-tools-container">
-                            <div id="draw-tools-row-container">
-                                <img class="back" id="draw-tools-back1" src="/svg/back.svg" alt="back" />
-                                <div id="draw-tools-row1">
-                                    <img src="/svg/paint-roller.svg" alt="Paint Tool" />
-                                    <img src="/svg/fill-drip.svg" alt="Fill Tool" />
-                                </div>
-                                <div id="draw-tools-row2">
-                                    <img src="/svg/eraser.svg" alt="Eraser Tool" />
-                                    <img src="/svg/trash.svg" alt="Clear All" />
-                                </div>
-                            </div>
-                            <div id="draw-tools-presets-container">
-                                <div id="draw-tools-preset-row1">
-                                    quick color select (ROY G BIV + white)
-                                </div>
-                                <div id="draw-tools-preset-row2">
-                                    <img src="svg/lightbulb.svg" alt="Brightness" />
-                                    <input type="range" min="0" max="1" value="1" step="0.01" class="slider" id="draw-brightness">
-                                </div>
-                                <div id="draw-tools-preset-row3">
-                                    custom color
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="draw-presets">
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="css/main.css">
+	</head>
+	<body>
+		<main class="app-container">
+			<section id="background">
+				<canvas id="leds"></canvas>
+				<!-- v1: 3 "dynamic" rectangles created via JS [✓]
+					 v2: n dynamic rectangles created via JS & can be edited. Can also create/destroy rectangles. [ ]
+						 (Each rectangle represents a set of LEDs determined when it is created.) 
+					 v3: Create different views per device -->
+					<div id="back-left-container">
+						<svg id="back-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
+					</div>
+			</section>
+			<section id="controls">
+				<!-- Controls -->
+				<div id="main">
+					<button id="draw-btn" type="button" class="btn btn-secondary">Draw</button>
+					<button id="preset-btn" type="button" class="btn btn-secondary">Presets</button>
+					<button id="clear-btn" type="button" class="btn btn-secondary">Clear</button>
+				</div>
+				<div id="draw">
+					<div id="draw-controls">
+						<div id="draw-tools-container" class="container">
+							<div id="draw-tools-row-container" class="row">
+								<div id="draw-tools-row1" class="col-lg">
+									<img src="/svg/paint-roller.svg" alt="Paint Tool" />
+									<img src="/svg/fill-drip.svg" alt="Fill Tool" />
+								</div>
+								<div id="draw-tools-row2" class="col-lg">
+									<img src="/svg/eraser.svg" alt="Eraser Tool" />
+									<img src="/svg/trash.svg" alt="Clear All" />
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="draw-presets">
+						<div id="draw-tools-presets-container">
+							<div id="draw-tools-preset-row1">
+								<div id="draw-quick-colors">
+									<button id="qc-r">r</button>
+									<button id="qc-o">o</button>
+									<button id="qc-y">y</button>
+									<button id="qc-g">g</button>
+									<button id="qc-b">b</button>
+									<button id="qc-i">i</button>
+									<button id="qc-v">v</button>
+									<button id="qc-w">w</button>
+								</div>
+							</div>
+							<div id="draw-tools-preset-row2">
+								<svg class="small-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><!-- Font Awesome Free 5.15.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M96.06 454.35c.01 6.29 1.87 12.45 5.36 17.69l17.09 25.69a31.99 31.99 0 0 0 26.64 14.28h61.71a31.99 31.99 0 0 0 26.64-14.28l17.09-25.69a31.989 31.989 0 0 0 5.36-17.69l.04-38.35H96.01l.05 38.35zM0 176c0 44.37 16.45 84.85 43.56 115.78 16.52 18.85 42.36 58.23 52.21 91.45.04.26.07.52.11.78h160.24c.04-.26.07-.51.11-.78 9.85-33.22 35.69-72.6 52.21-91.45C335.55 260.85 352 220.37 352 176 352 78.61 272.91-.3 175.45 0 73.44.31 0 82.97 0 176zm176-80c-44.11 0-80 35.89-80 80 0 8.84-7.16 16-16 16s-16-7.16-16-16c0-61.76 50.24-112 112-112 8.84 0 16 7.16 16 16s-7.16 16-16 16z"/></svg>
+								<input type="range" min="0" max="1" value="1" step="0.01" class="slider" id="draw-brightness">
+							</div>
+							<div id="draw-tools-preset-row3">
+								<button id="custom-color-btn" type="button" class="btn btn-primary">Custom Color</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="color">
+					custom color menu
+				</div>
+				<div id="presets">
+					presets menu
+				</div>
+			</section>
+		</main>
 
-                    </div>
-                </div>
-                <div id="color">
-                    custom color menu
-                </div>
-                <div id="presets">
-                    presets menu
-                </div>
-            </section>
-        </main>
-
-        <script type="text/javascript" src="js/jquery-3.5.1.min.js"></script>
-        <script type="text/javascript" src="js/popper.min.js"></script>
-        <script type="text/javascript" src="js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="js/main.js"></script>
-    </body>
+		<script type="text/javascript" src="js/jquery-3.5.1.min.js"></script>
+		<script type="text/javascript" src="js/popper.min.js"></script>
+		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
+	</body>
 </html>
